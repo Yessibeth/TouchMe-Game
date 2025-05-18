@@ -20,7 +20,7 @@ jobs:
           cd python-for-android/TouchMe
           ./build.py --dir $GITHUB_WORKSPACE --package org.touchme --name "TouchMe"
       - name: Upload APK
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: TouchMe-APK
           path: python-for-android/TouchMe/bin/
