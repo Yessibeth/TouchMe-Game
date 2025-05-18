@@ -1,26 +1,39 @@
 name: Build Android APK
 on: [push]
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.9'
+          
       - name: Install dependencies
         run: |
           pip install -r requirements.txt
           git clone https://github.com/kivy/python-for-android
           cd python-for-android
           ./distribute.sh -m "kivy" -d TouchMe
+          
       - name: Build APK
         run: |
           cd python-for-android/TouchMe
           ./build.py --dir ${{ github.workspace }} --package org.touchme --name "TouchMe"
+          
+      - name: Debug - List APK files
+        run: |
+          echo "=== BUSCANDO ARCHIVOS APK ==="
+          find . -name "*.apk" -printf "Encontrado: %p\n" || echo "No se encontraron APKs"
+          
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: TouchMe-APK
-          path: python-for-android/TouchMe/bin/
+          path: |
+            python-for-android/TouchMe/bin/TouchMe-*.apk
+            python-for-android/dist/TouchMe-*.apk
+            python-for-android/bin/TouchMe-*.apk
