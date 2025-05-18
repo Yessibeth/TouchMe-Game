@@ -4,36 +4,46 @@ on: [push]
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 30  # Añadido timeout mayor
+    
     steps:
-      - uses: actions/checkout@v4
-      
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.9'
-          
-      - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
-          git clone https://github.com/kivy/python-for-android
-          cd python-for-android
-          ./distribute.sh -m "kivy" -d TouchMe
-          
-      - name: Build APK
-        run: |
-          cd python-for-android/TouchMe
-          ./build.py --dir ${{ github.workspace }} --package org.touchme --name "TouchMe"
-          
-      - name: Debug - List APK files
-        run: |
-          echo "=== BUSCANDO ARCHIVOS APK ==="
-          find . -name "*.apk" -printf "Encontrado: %p\n" || echo "No se encontraron APKs"
-          
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: TouchMe-APK
-          path: |
-            python-for-android/TouchMe/bin/TouchMe-*.apk
-            python-for-android/dist/TouchMe-*.apk
-            python-for-android/bin/TouchMe-*.apk
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Necesario para clonar submodules
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+
+    - name: Debug - Show workspace structure
+      run: |
+        echo "=== ESTRUCTURA INICIAL ==="
+        ls -R
+        echo "========================="
+
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
+        git clone --recursive https://github.com/kivy/python-for-android
+        cd python-for-android
+        ./distribute.sh -m "kivy" -d TouchMe
+
+    - name: Build APK
+      run: |
+        cd python-for-android/TouchMe
+        echo "=== CONTENIDO ANTES DE BUILD ==="
+        ls -R
+        ./build.py --dir ${{ github.workspace }} --package org.touchme --name "TouchMe"
+        echo "=== ARCHIVOS GENERADOS ==="
+        find . -name "*.apk"
+
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: TouchMe-APK
+        path: |
+          python-for-android/TouchMe/bin/*.apk
+          python-for-android/dist/*.apk
+          python-for-android/bin/*.apk
